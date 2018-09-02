@@ -1,0 +1,49 @@
+#!/bin/sh
+
+notify-send "yes panel was called"
+
+PANEL_HEIGHT=48
+PANEL_FONT="DejaVuSansMono:size=8"
+MODULES="$HOME/.config/bspwm/panel/modules"
+
+. panel_colors
+
+if xdo id -a "$PANEL_WM_NAME" > /dev/null ; then
+    notify-send "The panel is already running"
+    printf "%s\n" "The panel is already running."
+    exit 1
+fi
+
+# trap 'trap - TERM; kill 0' INT TERM QUIT EXIT
+
+[ -e "$PANEL_FIFO" ] && rm "$PANEL_FIFO"
+mkfifo "$PANEL_FIFO"
+
+notify-send "could make fifo"
+bspc subscribe report > "$PANEL_FIFO" &
+
+xtitle -t 64 -sf 'T%s\n' > "$PANEL_FIFO" &
+xclock -s -d 100 -f 'C' > "$PANEL_FIFO" &
+xbattery -s -d 5000 -f 'B' > "$PANEL_FIFO" &
+# TODO give -f format
+#xdate > "$PANEL_FIFO" &
+
+#panel_bar < "$PANEL_FIFO" | lemonbar -b -a 32 -u 4 -n "$PANEL_WM_NAME" -g x"$PANEL_HEIGHT" -f "$PANEL_FONT" -F "$COLOR_DEFAULT_FG" -B "$COLOR_DEFAULT_BG" | sh &
+
+panel_bar < "$PANEL_FIFO" \
+    | lemonbar \
+          -b \
+          -a 32 \
+          -u 4 \
+          -n "$PANEL_WM_NAME" \
+          -g x"$PANEL_HEIGHT" \
+          -f "$PANEL_FONT" \
+          -F "$COLOR_DEFAULT_FG" \
+          -B "$COLOR_DEFAULT_BG" \
+          -p \
+    | sh &
+
+
+notify-send "got all the way down the script"
+# wid=$(xdo id -m -a "$PANEL_WM_NAME")
+# xdo above -t "$(xdo id -N Bspwm -n root | sort | head -n 1)" "$wid"

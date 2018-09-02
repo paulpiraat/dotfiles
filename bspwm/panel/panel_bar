@@ -1,0 +1,85 @@
+#!/bin/sh
+
+# while read -r line ; do
+#     case $line in
+#         W*)
+#             wm=
+#             set -- ${line#?}
+#     esac
+#     printf "%s\n" "%{l}${wm}%{c}%{r}"
+# done
+
+. panel_colors
+
+#notify-send "panel bar going on"
+clock="placeholder_clock"
+title="placeholder_title"
+SEPARATOR_L=":"
+
+# bspwm module
+bspc_next() {	# focus next occupied desktop
+    bspc desktop -f next.occupied
+}
+bspc_prev() {	# focus previous occupied desktop
+    bspc desktop -f prev.occupied
+}
+bspc_last()	{	# focus last focused desktop
+    bspc desktop -f last
+}
+bspc_focus() {	# focus desktop; 1 parameter: desktop
+    bspc desktop -f "$1"
+}
+bspc_layout() {	# switch to the next layout (tiling or monocle)
+    bspc desktop -l next
+}
+
+#printf "%s\n" "%{l}sometext"
+while read -r line ; do
+    case $line in
+        C*)
+            clock="%{F$COLOR_TITLE_FG}%{B$COLOR_TITLE_BG} ${line#?} %{B-}%{F-}"
+	    ;;
+        T*)
+            title="%{F$COLOR_TITLE_FG}%{B$COLOR_TITLE_BG} ${line#?} %{B-}%{F-}"
+            ;;
+        B*)
+            battery="%{F$COLOR_TITLE_FG}%{B$COLOR_TITLE_BG} ${line#?} %{B-}%{F-}"
+            ;;
+        W*)
+            wm=""
+            IFS=':'
+            for entry in $line; do
+                desktop="${entry#?}"
+                case $entry in 
+                    O*|F*|U*) # highlight focused desktop (occupied, free or urgent)
+			wm="${wm}%{A1:bspc_last:}${BC1}${SP}${desktop}${SP}${BC}%{A1}"
+                        #wm="${wm}%{F${FG}}%{B${BG}}%{A:bspc monitor -f ${name}:} ${name} %{A}%{B-}%{F-}"
+                        ;;
+		    o*|u*)    # show unfocused desktops (occupied or urgent)
+			wm="${wm}%{A1:bspc_focus ${desktop}:}${SP}${desktop}${SP}%{A1}"
+                        ;;
+		    L*)       # show current layout (tiling or monocle)
+                        case $desktop in
+			    T)	layout_ind="${ICO}${ICON_TIL}${TXT}"
+                                ;;
+			    M)	layout_ind="${ICO}${ICON_MON}${TXT}"
+                                ;;
+			    *)	layout_ind="${SP}${desktop}${SP}"
+                                ;;
+                        esac
+                        #wm="${wm}%{A1:bspc_layout:}${SEPARATOR_L}${layout_ind}%{A1}"
+                        wm="${wm}%{F${FG}}%{B${BG}}%{U${UL}}%{+u}%{A1:bspc_layout:}${SEPARATOR_L}${layout_ind}%{A1}%{B-}%{F-}%{-u}"
+                        ;;
+                esac
+            done
+            ;;
+    esac
+    #     W*)
+    #title="i am a title"
+    #wm="here come some wm things"
+    #printf "%s\n" "%{l}${wm}%{c}${title}%{r}"
+    #echo "%{c}centerme%{A:$(notify-send "youwot"):} click here to notify %{A}"
+    printf "%s\n" "%{l}$wm%{c}$title%{r}$battery|$clock"
+    #    esac
+done
+# #echo "hello"
