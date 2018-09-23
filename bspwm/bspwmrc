@@ -18,14 +18,11 @@ bspc config pointer_follows_monitor true
 # bspc config remove_disabled_monitors true
 # bspc config remove_unplugged_monitors true
 
-bspc rule -a Gimp desktop='^8' state=floating follow=on
-bspc rule -a Chromium desktop='^2'
-bspc rule -a mplayer2 state=floating
-bspc rule -a Kupfer.py focus=on
-bspc rule -a Screenkey manage=off
+bspc rule -a Gimp state=tiled follow=on
 bspc rule -a Emacs state=tiled
 
 notify-send "read bspwmrc"
 # [ -e "$PANEL_FIFO" ] && bspc subscribe report > "$PANEL_FIFO" &
 # pgrep -x panel > /dev/null || panel &
-panel &
+#panel &
+$HOME/.scripts/touchpad.sh

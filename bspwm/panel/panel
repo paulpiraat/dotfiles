@@ -2,9 +2,8 @@
 
 notify-send "yes panel was called"
 
-PANEL_HEIGHT=48
+PANEL_GEOMETRY=$($HOME/.scripts/panel_geometry 48)
 PANEL_FONT="DejaVuSansMono:size=8"
-MODULES="$HOME/.config/bspwm/panel/modules"
 
 . panel_colors
 
@@ -36,7 +35,7 @@ panel_bar < "$PANEL_FIFO" \
           -a 32 \
           -u 4 \
           -n "$PANEL_WM_NAME" \
-          -g x"$PANEL_HEIGHT" \
+          -g "$PANEL_GEOMETRY" \
           -f "$PANEL_FONT" \
           -F "$COLOR_DEFAULT_FG" \
           -B "$COLOR_DEFAULT_BG" \
