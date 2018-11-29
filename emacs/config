@@ -2,16 +2,13 @@
 ;;; $ npm install -g tern
 ;;; place a .tern-project file in the root folder of a project
 
-;;; Load PATH variables
-(exec-path-from-shell-initialize)
-
 ;;; Additional emacs configurations
 
 ;;; Temp solution for tern bug. See https://emacs.stackexchange.com/questions/40865/emacs-lisp-error-need-a-pre-parsed-url
 ;; (cl-old-struct-compat-mode 1)
 
 ;;; Turn of lisp mode for this file
-(add-to-list 'auto-mode-alist '("\\emacs/config\\'" . lisp-mode))
+(add-to-list 'auto-mode-alist '("\\.config\\'" . lisp-mode))
 
 ;;; Autosave & Backup
 ;; Put autosave files (ie #foo#) and backup files (ie foo~) in ~/.emacs.d/.
@@ -36,26 +33,54 @@
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 (add-hook 'rjsx-mode-hook 'flycheck-mode)
 
-(setq flycheck-shellcheck-follow-sources nil)
+(defun my/use-tslint-from-node-modules ()
+  (let* ((root (locate-dominating-file
+                (or (buffer-file-name) default-directory)
+                "node_modules"))
+         (tslint (and root
+                      (expand-file-name "node_modules/tslint/bin/tslint"
+                                        root))))
+    (when (and tslint (file-executable-p tslint))
+      (setq-local flycheck-javascript-tslint-executable tslint))))
+(add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
+(add-hook 'typescript-mode-hook 'flycheck-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; Shell
-(add-hook 'shell-script-mode-hook 'flycheck-mode)
-(add-hook 'sh-mode-hook 'flycheck-mode)
+;;: Hunspell
 
+(setq ispell-program-name "hunspell")
+(setq ispell-local-dictionary "en_US")
+(setq ispell-local-dictionary-alist
+      ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
+      ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
+      '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)
+        ))
+
+(add-hook 'text-mode-hook 'flyspell-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; ;;; Prettier
+;; ;;; TODO only load when js was hooked
 ;; (require 'prettier-js)
-;; ;; TODO write a plugin that reads the rules form .eslintrc or .prettierrc
-;; (setq prettier-js-args '(
-;; ;;  "--eslint-integration" "true"
-;;   "--single-quote" "true"
-;;   "--trailing-comma" "es5"
-;;   "--semi" "false"
-;;   ))
+;; ;; ;; TODO write a plugin that reads the rules form .eslintrc or .prettierrc
+;; ;; (setq prettier-js-args '(
+;; ;; ;;  "--eslint-integration" "true"
+;; ;;   "--single-quote" "true"
+;; ;;   "--trailing-comma" "es5"
+;; ;;   "--semi" "false"
+;; ;;   ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ctags
+
+;; (add-hook 'rjsx-hook
+;;           (lambda ()
+;;             (when (derived-mode-p 'c-mode 'c++-mode 'java-mode)
+;;               (ggtags-mode 1))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Node
 (add-to-list 'interpreter-mode-alist '("node" . js2-mode))
@@ -64,6 +89,9 @@
 (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
 (eval-after-load "js2-highlight-vars-autoloads"
   '(add-hook 'rjsx-mode-hook (lambda () (js2-highlight-vars-mode))))
+
+;; ;;; Ctags
+;; (add-hook 'rjsx-mode-hook 'ggtags-mode)
 
 (setq js2-mode-show-parse-errors nil)
 (setq js2-mode-show-strict-warnings nil)
@@ -81,7 +109,9 @@
 
 ;;; Company
 (eval-after-load 'company
-  '(add-to-list 'company-backends 'company-tern))
+  '(progn
+     '(add-to-list 'company-backends 'company-tern)
+     '(add-to-list 'company-backends 'company-glsl)))
 (add-hook 'rjsx-mode-hook 'company-mode)
 ;;(setq company-backends '(company-tern))
 ;;;;;;;; (add-hook 'rjsx-mode-hook (lambda () (set (make-local-variable 'company-backends) '(company-tern))))
@@ -109,40 +139,55 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (setenv "PATH"
-;;         (concat
-;;          "~/.cargo/bin/" ";"
-;;          "~/.cargo/env" ";"
-;;          (getenv "PATH")
-;;          ))
+;;; JSON
+(add-hook 'json-mode-hook #'flycheck-mode)
 
-;; (setq exec-path
-;;         '(
-;;          "~/.cargo/bin/"
-;;          "~/.cargo/env"
-;;          ))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; TypeScript
+
+(defun setup-tide-mode ()
+  (interactive)
+  (tide-setup)
+  (flycheck-mode +1)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (eldoc-mode +1)
+  (tide-hl-identifier-mode +1)
+  ;; company is an optional dependency. You have to
+  ;; install it separately via package-install
+  ;; `M-x package-install [ret] company`
+  (company-mode +1))
+
+;; aligns annotation to the right hand side
+(setq company-tooltip-align-annotations t)
+
+;; formats the buffer before saving
+(add-hook 'before-save-hook 'tide-format-before-save)
+
+(add-hook 'typescript-mode-hook #'setup-tide-mode)
+
+;;; TSX
+(require 'typescript-mode)
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode))
+(add-hook 'typescript-mode-hook
+          (lambda ()
+            (when (string-equal "tsx" (file-name-extension buffer-file-name))
+              (setup-tide-mode))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; GLSL
+(add-hook 'glsl-mode-hook 'company-mode)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Rust
 (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
 
-(with-eval-after-load 'rust-mode
-  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
-  (add-hook 'rust-mode-hook 'flycheck-mode))
-
-;; rust fmt
-(add-hook 'rust-mode-hook
-          (lambda ()
-            (local-set-key (kbd "C-c <tab>") #'rust-format-buffer)))
-
 ;;; Racer
-(setq racer-cmd "~/.cargo/bin/racer") ;; Rustup binaries PATH
-(setq racer-rust-src-path "~/.multirust/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src")
 (add-hook 'rust-mode-hook #'racer-mode)
 (add-hook 'racer-mode-hook #'eldoc-mode)
 (add-hook 'racer-mode-hook #'company-mode)
-
-;;; Cargo
-(add-hook 'rust-mode-hook 'cargo-minor-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SSH
@@ -177,8 +222,8 @@ sPath: ")
 (advice-add #'js-jsx-indent-line :after #'js-jsx-indent-line-align-closing-bracket)
 
 ;;; Font
-(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-9" ))
-(set-face-attribute 'default t :font "DejaVu Sans Mono-9" )
+(add-to-list 'default-frame-alist '(font . "mononoki-8" ))
+(set-face-attribute 'default t :font "mononoki-8" )
 
 ;; eslint flycheck test
 (defun test-checkstyle ()
