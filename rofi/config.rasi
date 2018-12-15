@@ -1,128 +1,65 @@
-/* ================================================= */
-/*  Rofi config by lans9831                          */
-/*  Suggested icon pack: Papirus                     */
-/* ================================================= */
+/**
+ * ROFI Color theme
+ * User: Rokit
+*/
 
-configuration {
-  disable-history: true;
-  modi: "drun,run,window";
-  sidebar-mode: true;
-}
 * {
-  font: "Roboto Condensed 11";
-  text-color:        @base00;
-  background-color:  rgba(0,0,0,0);
-  base03:  #002b36;
-  base02:  #073642;
-  base01:  #586e75;
-  base00:  #657b83;
-  base0:   #839496;
-  base1:   #93a1a1;
-  base2:   #eee8d5;
-  base3:   #fdf6e3;
-  yellow:  #b58900;
-  orange:  #cb4b16;
-  red:     #dc322f;
-  magenta: #d33682;
-  violet:  #6c71c4;
-  blue:    #268bd2;
-  cyan:    #2aa198;
-  green:   #859900;
+  main-bg-color: #000000;
+  base-bg: #d9d6b7ee;
+  selected-bg: #fffacd;
+  base-color: #Fff8dc;
+  selected-color: #696969;
+  border-color: #00000066;
+  transparent: #000000;
+  entry-color: #696969;
+  text-color: @base-color;
+  font: "Mononoki 12";
 }
-
 #window {
-  fullscreen:    true;
-  location:      west;
-  anchor:        west;
-  border:        0px 0px 54px 0px;
-  transparency:  "real";
+  location:      north;
+  anchor:        north;
+  width:         100%;
+  border:        0px 0px 0px 0px;
 
   orientation:  horizontal;
-  children:     [mainbox, dummy];
+  children:     [ horibox ];
 }
-
-/* First container */
-#mainbox {
-  expand:            false;
-  background-color:  @base3;
-  border:            7px;
-  border-color:      @base00;
-  spacing: 0px;
+#horibox {
+  background-color: @transparent;
+  orientation: horizontal;
+  children: [ prompt, textbox-prompt-colon, entry, listview ];
 }
-
-/* Dummy container */
-#dummy { 
-  expand: true; 
-}
-
-#sidebar {
-  spacing: 0px;
-}
-#button {
-  padding:    15px;
-  spacing:    0px;
-  background-color:  @base0;
-  text-color:	     @base3;
-}
-#button selected {
-  font:              "Roboto Condensed 11";
-  background-color:  @base00;
-  text-color:	     @base3;
-}
-
-#inputbar {
-  background-color:  @base0;
-  padding:           15px 10px 15px 10px;
-  spacing:           10px;
-}
-
 #prompt {
-  font: "Roboto Condensed Bold 11";
-  text-color: @base3;
+  text-color: @selected-color;
+  padding: 0.5em 0px 0.5em 1em;
+  background-color: @main-bg-color;
+  text-color: @selected-bg;
 }
-
+#textbox-prompt-colon  {
+  expand: false;
+  padding: 0.5em 1em 0.5em 0px;
+  background-color: @main-bg-color;
+  text-color: @selected-bg;
+}
 #entry {
-  font: "Roboto Condensed 11";
-  text-color: @base3;
-  width: 18em;
+  padding: 0.5em;
+  text-color: @selected-bg;
+  background-color: @entry-color;
+  expand: false;
+  width: 10em;
 }
-
 #listview {
-  spacing: 0px;
+  background-color: @main-bg-color;
+  layout: horizontal;
+  spacing: 0.5em;
+  lines: 50;
 }
-
 #element {
-  font:             "Roboto Condensed 11";
-  padding:          10px;
+  background-color: @transparent;
+  padding: 0.5em;
 }
-
-#element selected normal {
-  background-color: @base00;
-  text-color:	    @base3;
+#element selected {
+  border: 0px 1px;
+  text-color: @selected-color;
+  background-color: @selected-bg;
 }
-#element selected active {
-  background-color: @base00;
-  text-color:	    @magenta;
-}
-#element selected urgent {
-  background-color: @base00;
-  text-color:	    @red;
-}
-#element normal active {
-  text-color:	    @magenta;
-}
-#element normal urgent {
-  text-color:	    @red;
-}
-#element alternate normal {
-  background-color: @base2;
-}
-#element alternate active {
-  background-color: @base2;
-}
-#element alternate urgent {
-  background-color: @base2;
-  text-color:	    @red;
-}
-
-/* vim:ft=css */
