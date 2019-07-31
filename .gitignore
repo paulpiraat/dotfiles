@@ -1,7 +1,10 @@
-chromium
-configstore
-dconf
-gtk-3.0
-mimeapps.list
-pulse
-gconf
+/*
+
+!/bspwm/
+!/compton/
+!/dunst/
+/emacs/#*#
+!/emacs/
+!/rofi/
+!/sxhkd/
+!/fish/functions/

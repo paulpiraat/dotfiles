@@ -2,6 +2,9 @@
 ;;; $ npm install -g tern
 ;;; place a .tern-project file in the root folder of a project
 
+;;; Load PATH variables
+(exec-path-from-shell-initialize)
+
 ;;; Additional emacs configurations
 
 ;;; Temp solution for tern bug. See https://emacs.stackexchange.com/questions/40865/emacs-lisp-error-need-a-pre-parsed-url
@@ -33,65 +36,34 @@
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 (add-hook 'rjsx-mode-hook 'flycheck-mode)
 
-(defun my/use-tslint-from-node-modules ()
-  (let* ((root (locate-dominating-file
-                (or (buffer-file-name) default-directory)
-                "node_modules"))
-         (tslint (and root
-                      (expand-file-name "node_modules/tslint/bin/tslint"
-                                        root))))
-    (when (and tslint (file-executable-p tslint))
-      (setq-local flycheck-javascript-tslint-executable tslint))))
-(add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
-(add-hook 'typescript-mode-hook 'flycheck-mode)
+;; (defun my/use-tslint-from-node-modules ()
+;;   (let* ((root (locate-dominating-file
+;;                 (or (buffer-file-name) default-directory)
+;;                 "node_modules"))
+;;          (tslint (and root
+;;                       (expand-file-name "node_modules/tslint/bin/tslint"
+;;                                         root))))
+;;     (when (and tslint (file-executable-p tslint))
+;;       (setq-local flycheck-typescript-tslint-executable tslint))))
+
+;; (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
+;; (add-hook 'typescript-mode-hook 'flycheck-mode)
+
+;;; Shell
+(add-hook 'shell-script-mode-hook 'flycheck-mode)
+(add-hook 'sh-mode-hook 'flycheck-mode)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;: Hunspell
-
-(setq ispell-program-name "hunspell")
-(setq ispell-local-dictionary "en_US")
-(setq ispell-local-dictionary-alist
-      ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
-      ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
-      '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)
-        ))
-
-(add-hook 'text-mode-hook 'flyspell-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; ;;; Prettier
-;; ;;; TODO only load when js was hooked
-;; (require 'prettier-js)
-;; ;; ;; TODO write a plugin that reads the rules form .eslintrc or .prettierrc
-;; ;; (setq prettier-js-args '(
-;; ;; ;;  "--eslint-integration" "true"
-;; ;;   "--single-quote" "true"
-;; ;;   "--trailing-comma" "es5"
-;; ;;   "--semi" "false"
-;; ;;   ))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ctags
-
-;; (add-hook 'rjsx-hook
-;;           (lambda ()
-;;             (when (derived-mode-p 'c-mode 'c++-mode 'java-mode)
-;;               (ggtags-mode 1))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; Node
-(add-to-list 'interpreter-mode-alist '("node" . js2-mode))
 
 ;;; Javascript
 (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+(add-to-list 'interpreter-mode-alist '("node" . js2-mode))
 (eval-after-load "js2-highlight-vars-autoloads"
   '(add-hook 'rjsx-mode-hook (lambda () (js2-highlight-vars-mode))))
-
-;; ;;; Ctags
-;; (add-hook 'rjsx-mode-hook 'ggtags-mode)
 
 (setq js2-mode-show-parse-errors nil)
 (setq js2-mode-show-strict-warnings nil)
@@ -99,13 +71,13 @@
 ;;; Javascript Refactor
 (add-hook 'rjsx-mode-hook #'js2-refactor-mode)
 
-;; ;;; JSX
-;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js2-jsx-mode))
+;;; JSX
+(add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
 
 (eval-after-load 'rjsx-mode
-    '(progn
-       (add-hook 'rjsx-mode-hook #'add-node-modules-path)
-       (add-hook 'rjsx-mode-hook #'prettier-js-mode)))
+  '(progn
+     (add-hook 'rjsx-mode-hook #'add-node-modules-path)
+     (add-hook 'rjsx-mode-hook #'prettier-js-mode)))
 
 ;;; Company
 (eval-after-load 'company
@@ -122,7 +94,7 @@
                              (tern-mode))))
 
 ;;; Remove whitespaces after save
- (add-hook 'js2-mode-hook
+ (add-hook 'rjsx-hook
 	   (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
 
 
@@ -144,8 +116,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; TypeScript
-
+;;; Typescript
 (defun setup-tide-mode ()
   (interactive)
   (tide-setup)
@@ -166,14 +137,18 @@
 
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
 
+
 ;;; TSX
-(require 'typescript-mode)
-(add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode))
-(add-hook 'typescript-mode-hook
+(require 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
+(add-hook 'web-mode-hook
           (lambda ()
             (when (string-equal "tsx" (file-name-extension buffer-file-name))
               (setup-tide-mode))))
-
+;; enable typescript-tslint checker
+;;(flycheck-add-mode 'typescript-tslint 'web-mode)
+(add-hook 'web-mode-hook 'flycheck-mode)
+(add-hook 'typescript-mode-hook 'flycheck-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; GLSL
@@ -184,33 +159,43 @@
 ;;; Rust
 (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
 
+(with-eval-after-load 'rust-mode
+  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
+  (add-hook 'rust-mode-hook 'flycheck-mode))
+
+;; rust fmt
+(add-hook 'rust-mode-hook
+          (lambda ()
+            (local-set-key (kbd "C-c <tab>") #'rust-format-buffer)))
+
 ;;; Racer
+(setq racer-cmd "~/.cargo/bin/racer") ;; Rustup binaries PATH
+(setq racer-rust-src-path "~/.multirust/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src") 
 (add-hook 'rust-mode-hook #'racer-mode)
 (add-hook 'racer-mode-hook #'eldoc-mode)
 (add-hook 'racer-mode-hook #'company-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SSH
-(defun connect-to-ssh (user host path)
-  (interactive "sUser:
-sHost:
-sPath: ")
-  (find-file (concat "/ssh:" user "@" host ":" path )))
-
-;;; Keybindings
-(global-set-key (kbd "M-p") 'projectile-find-file) ; Meta+p
-(global-set-key (kbd "C-c c") 'comment-or-uncomment-region) ; Ctrl+c c
-(global-set-key (kbd "C-c r") 'connect-to-ssh) ; Ctrl+c
-
-;;; Keybindings js2
-(add-hook 'js2-mode-hook
-          (lambda () (global-set-key (kbd "C-c e") 'eslint-fix-file))) ; Ctrl+e
+;;; Cargo
+(add-hook 'rust-mode-hook 'cargo-minor-mode)
 
 ;;; Prevent rjsx-mode from auto inserting html tags
 (with-eval-after-load 'rjsx-mode
   (define-key rjsx-mode-map "<" nil)
   (define-key rjsx-mode-map (kbd "C-d") nil)
   (define-key rjsx-mode-map ">" nil))
+
+;;; Keybindings js2
+;; (add-hook 'rjsx-hook
+;;           (lambda () (global-set-key (kbd "C-c e") 'eslint-fix-file))) ; Ctrl+e
+
+
+;;; GLSL
+(add-to-list 'auto-mode-alist '("\\.vert\\'" . glsl-mode))
+(add-to-list 'auto-mode-alist '("\\.tesc\\'" . glsl-mode))
+(add-to-list 'auto-mode-alist '("\\.tese\\'" . glsl-mode))
+(add-to-list 'auto-mode-alist '("\\.geom\\'" . glsl-mode))
+(add-to-list 'auto-mode-alist '("\\.frag\\'" . glsl-mode))
+(add-to-list 'auto-mode-alist '("\\.comp\\'" . glsl-mode))
 
 ;;; Prevent auto indent on html </>
 (defun js-jsx-indent-line-align-closing-bracket ()
@@ -221,9 +206,48 @@ sPath: ")
       (delete-char sgml-basic-offset))))
 (advice-add #'js-jsx-indent-line :after #'js-jsx-indent-line-align-closing-bracket)
 
+;; Flycheck for GLSL
+(require 'flycheck)
+(flycheck-define-checker glsl-checker
+  "A GLSL syntax checker using glslangValidator."
+  :command ("glslangValidator" source)
+  :error-patterns
+  ((error line-start
+          "ERROR: "
+          column ":"
+          line ":"
+          (message)
+          line-end)
+   (warning line-start
+            "wARNING: "
+            column ":"
+            line ":"
+            (message)
+            line-end)
+   (info line-start
+         "NOTE: "
+         column ":"
+         line ":"
+         (message)
+         line-end))
+  :modes (glsl-mode))
+
+;; (with-eval-after-load 'rust-mode
+;;   (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
+;;   (add-hook 'rust-mode-hook 'flycheck-mode))
+
+;; (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
+
+(add-hook 'glsl-mode-hook (lambda ()
+                            (flycheck-mode)
+                            (flycheck-select-checker 'glsl-checker)))
+;; (add-hook 'glsl-mode-hook #
+
 ;;; Font
-(add-to-list 'default-frame-alist '(font . "mononoki-8" ))
-(set-face-attribute 'default t :font "mononoki-8" )
+(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-9" ))
+(set-face-attribute 'default t :font "DejaVu Sans Mono-9" )
+;;(add-to-list 'default-frame-alist '(font . "Cousine-10" ))
+;;(set-face-attribute 'default t :font "Cousine-10" )
 
 ;; eslint flycheck test
 (defun test-checkstyle ()
@@ -235,3 +259,20 @@ sPath: ")
                       (flycheck-parse-checkstyle output 'eslint (current-buffer)))))))
 
 (setq flycheck-xml-parser 'flycheck-parse-xml-region)
+
+;;; Font
+;; (add-to-list 'default-frame-alist '(font . "mononoki-10" ))
+;; (set-face-attribute 'default t :font "mononoki-10" )
+;; (set-face-attribute 'default nil :height 90)
+(add-to-list 'default-frame-alist '(font . "Cousine-8" ))
+(set-face-attribute 'default t :font "Cousine-8" )
+
+
+(hl-line-mode 1)
+
+
+(setq hl-line-mode '(1))
+
+;; Load keybindings
+(load "~/.config/emacs/keybindings.lisp")
+;;; config.lisp ends here

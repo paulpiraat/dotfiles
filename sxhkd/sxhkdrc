@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 #
 # wm independent hotkeys
 #
@@ -6,10 +6,10 @@
 # terminal emulator
 super + Return
 	urxvt
-
+  
 # program launcher
-super + @space
-	dmenu_run
+super + space
+	rofi -show run -sort -modi calc,run
 
 # make sxhkd reload its configuration files:
 super + Escape
@@ -33,7 +33,7 @@ super + {_,shift + }w
 
 # alternate between the tiled and monocle layout
 super + m
-	bspc desktop -l next
+	bspc desktop -l next; notify-send "BSPWM" "monocle"
 
 # send the newest marked node to the newest preselected node
 super + y
@@ -48,9 +48,21 @@ super + g
 #
 
 # set the window state
-super + {t,shift + t,s,f}
-	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
+# super + {t,shift + t,s,f}
+# 	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
 
+super + t
+  bspc node -t tiled; notify-send "BSPWM" "tiled"
+
+super + shift + t
+  bspc node -t pseudo_tiled; notify-send "BSPWM" "pseudo tiled"
+
+super + s
+  bspc node -t floating; notify-send "BSPWM" "floating"
+
+super + f
+  bspc node -t fullscreen; notify-send "BSPWM" "fullscreen"
+  
 # set the node flags
 super + ctrl + {m,x,y,z}
 	bspc node -g {marked,locked,sticky,private}
@@ -131,51 +143,32 @@ super + {Left,Down,Up,Right}
 
 # Raise volume with 5%
 XF86AudioRaiseVolume
-        exec  pactl set-sink-volume @DEFAULT_SINK@ +5%
+	exec pactl set-sink-volume @DEFAULT_SINK@ +5%
 
 # Raise volume with 1%
 XF86AudioRaiseVolume + shift
-        exec pactl set-sink-volume @DEFAULT_SINK@ +1%
+	exec pactl set-sink-volume @DEFAULT_SINK@ +1%
 
 # Lower volume with 5%
 XF86AudioLowerVolume
-        exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+	exec pactl set-sink-volume @DEFAULT_SINK@ -5%
 
 # Lower volume with 1%
 XF86AudioLowerVolume + shift
-        exec pactl set-sink-volume @DEFAULT_SINK@ -1%
+	exec pactl set-sink-volume @DEFAULT_SINK@ -1%
 
 # Sound toggle on/off
 XF86AudioMute
-        exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+	exec pactl set-sink-mute @DEFAULT_SINK@ toggle
 
-# Microphone toggle on/off
-XF86AudioMicMute
-        exec pactl set-source-mute 1 toggle
+XF86AudioNext
+	exec cmus-remote --next
 
-# increase screen brightness
-XF86MonBrightnessUp
-        exec xbacklight -inc 5 
+XF86AudioPrev
+	exec cmus-remote --prev
 
-# increase small step
-XF86MonBrightnessUp + shift
-        exec xbacklight -inc 1 
-
-# decrease screen brightness
-XF86MonBrightnessDown
-        exec xbacklight -dec 5
-
-# decrease small step
-XF86MonBrightnessDown + shift
-        exec xbacklight -dec 1
-
-# Display toggle between useing external HMDI or not
-XF86Display
-        exec ~/.scripts/toggleExternalMonitor.sh
-
-XF86Bluetooth
-        bspc reload
-#        dmenu_run
+XF86AudioPlay
+	exec cmus-remote -u
 
 # # program launcher
 # super + @space
@@ -187,7 +180,7 @@ XF86Bluetooth
 #
 
 super + shift + f
-      firefox
+	firefox
 
 super + shift + e
-      emacsclient -c || emacs
+	emacsclient -nw || emacs
