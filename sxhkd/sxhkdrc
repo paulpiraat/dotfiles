@@ -33,7 +33,7 @@ super + {_,shift + }w
 
 # alternate between the tiled and monocle layout
 super + m
-	bspc desktop -l next
+	bspc desktop -l next; notify-send "BSPWM" "monocle"
 
 # send the newest marked node to the newest preselected node
 super + y
@@ -48,9 +48,21 @@ super + g
 #
 
 # set the window state
-super + {t,shift + t,s,f}
-	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
+# super + {t,shift + t,s,f}
+# 	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
 
+super + t
+  bspc node -t tiled; notify-send "BSPWM" "tiled"
+
+super + shift + t
+  bspc node -t pseudo_tiled; notify-send "BSPWM" "pseudo tiled"
+
+super + s
+  bspc node -t floating; notify-send "BSPWM" "floating"
+
+super + f
+  bspc node -t fullscreen; notify-send "BSPWM" "fullscreen"
+  
 # set the node flags
 super + ctrl + {m,x,y,z}
 	bspc node -g {marked,locked,sticky,private}

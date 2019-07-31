@@ -1,6 +1,13 @@
-#! /bin/sh
+#!/bin/bash
 
-bspc monitor -d I II III IV V VI VII VIII IX X
+monitor_count=$(bspc query -M | wc -l)
+echo "screencount:$monitor_count"
+if [[ $monitor_count -gt 1 ]]; then
+    bspc monitor DP-0 -d II III IV V VI VII VIII IX X
+    bspc monitor HDMI-0 -d I
+else
+    bspc monitor -d I II III IV V VI VII VIII IX X
+fi
 
 bspc config border_width        1
 bspc config window_gap          0
@@ -16,11 +23,12 @@ bspc config pointer_follows_monitor true
 # bspc config remove_unplugged_monitors true
 
 #bspc rule -a Gimp desktop='^8' state=floating follow=on
+bspc rule -a Godot desktop='^1' state=tiled
 bspc rule -a Emacs state=tiled
 bspc rule -a feh state=floating follow=on
 
-pkill -f panel
-$HOME/.scripts/panel/panel.sh
-
 # Set background
 feh --bg-fill ~/Pictures/E5Z_1btA.png
+
+pkill -f panel
+$HOME/.scripts/panel/panel.sh &
